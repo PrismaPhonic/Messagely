@@ -63,6 +63,9 @@ class User {
       `SELECT username, first_name, last_name
       FROM users;`
     )
+    if (!result.rows) {
+      throw new Error('No users in the database')
+    }
     return results.rows;
   }
 
@@ -82,6 +85,10 @@ class User {
       WHERE username = $1;`,
       [username]
     )
+    if (!result.rows[0]) {
+      throw new Error('No such user exists in the database')
+    }
+
     return results.rows[0];
   }
 
@@ -102,6 +109,10 @@ class User {
       WHERE users.username = $1;`,
       [username]
     )
+
+    if (!result.rows) {
+      throw new Error('Unable to locate any messages by user')
+    }
 
     return results.rows;
 
