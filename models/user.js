@@ -156,18 +156,18 @@ class User {
     const messages = results.rows;
 
     const fromUserPromises = messages.map(row => {
-      db.query(
-        `SELECT id, first_name, last_name, phone
+      return db.query(
+        `SELECT username, first_name, last_name, phone
         FROM users
         WHERE username = $1;`,
         [row.from_user]
-      )
+      );
     })
 
     const from_users = await Promise.all(fromUserPromises);
 
     for (let i = 0; i < messages.length; i++) {
-      messages[i].from_user = from_users[i];
+      messages[i].from_user = from_users[i].rows[0];
     }
 
     if (results.rows.length === 0) {
