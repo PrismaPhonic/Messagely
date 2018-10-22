@@ -47,10 +47,10 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    let result = await db.query(
+    let results = await db.query(
       "UPDATE users SET last_login_at = LOCALTIMESTAMP WHERE username = $1 RETURNING username, first_name, last_name",
       [username]);
-    if (!result.rows[0]) {
+    if (!results.rows[0]) {
       throw new Error('Unable to update timestamp')
     }
   }
@@ -63,7 +63,7 @@ class User {
       `SELECT username, first_name, last_name
       FROM users;`
     )
-    if (!result.rows) {
+    if (results.rows.length === 0) {
       throw new Error('No users in the database')
     }
     return results.rows;
@@ -85,7 +85,7 @@ class User {
       WHERE username = $1;`,
       [username]
     )
-    if (!result.rows[0]) {
+    if (!results.rows[0]) {
       throw new Error('No such user exists in the database')
     }
 
@@ -102,19 +102,36 @@ class User {
 
   static async messagesFrom(username) {
     let results = await db.query(
-      `SELECT id, from_username AS from_user, body, sent_at, read_at
+      `SELECT id, to_username AS to_user, body, sent_at, read_at
       FROM messages
       JOIN users
       ON users.username = messages.from_username
       WHERE users.username = $1;`,
       [username]
     )
+    const messages = results.rows;
 
-    if (!result.rows) {
-      throw new Error('Unable to locate any messages by user')
+    const toUserPromises = messages.map(row => {
+      db.query(
+        `SELECT id, first_name, last_name, phone
+        FROM users
+        WHERE username = $1;`,
+        [row.to_user]
+      )
+    })
+
+    const to_users = await Promise.all(toUserPromises);
+
+    for (let i = 0; i < messages.length; i++) {
+      messages[i].to_user = to_users[i];
     }
 
-    return results.rows;
+    if (results.rows.length === 0) {
+      throw new Error('Unable to locate any messages sent from user')
+    }
+
+    return messages;
+
 
   }
 
@@ -123,12 +140,12 @@ class User {
    * [{id, from_user, body, sent_at, read_at}]
    *
    * where from_user is
-   *   {id, first_name, last_name, phone}
+   *   {username, first_name, last_name, phone}
    */
 
   static async messagesTo(username) {
     let results = await db.query(
-      `SELECT id, to_username AS to_user, body, sent_at, read_at
+      `SELECT id, from_username AS from_user, body, sent_at, read_at
       FROM messages
       JOIN users
       ON users.username = messages.to_username
@@ -136,11 +153,28 @@ class User {
       [username]
     )
 
-    if (!result.rows) {
+    const messages = results.rows;
+
+    const fromUserPromises = messages.map(row => {
+      db.query(
+        `SELECT id, first_name, last_name, phone
+        FROM users
+        WHERE username = $1;`,
+        [row.from_user]
+      )
+    })
+
+    const from_users = await Promise.all(fromUserPromises);
+
+    for (let i = 0; i < messages.length; i++) {
+      messages[i].from_user = from_users[i];
+    }
+
+    if (results.rows.length === 0) {
       throw new Error('Unable to locate any messages sent to user')
     }
 
-    return results.rows;
+    return messages;
   }
 }
 
