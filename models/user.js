@@ -126,7 +126,22 @@ class User {
    *   {id, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) { }
+  static async messagesTo(username) {
+    let results = await db.query(
+      `SELECT id, to_username AS to_user, body, sent_at, read_at
+      FROM messages
+      JOIN users
+      ON users.username = messages.to_username
+      WHERE users.username = $1;`,
+      [username]
+    )
+
+    if (!result.rows) {
+      throw new Error('Unable to locate any messages sent to user')
+    }
+
+    return results.rows;
+  }
 }
 
 
