@@ -1,5 +1,5 @@
 /** Message class for message.ly */
-
+const db = require('../db');
 
 
 /** Message on the site. */
@@ -32,13 +32,15 @@ class Message {
       `UPDATE messages
       SET read_at = LOCALTIMESTAMP
       WHERE id = $1
-      RETURNING id;`,
+      RETURNING id, read_at;`,
       [id]
     )
 
     if (!results.rows[0]) {
       throw new Error('Unable to mark message as read')
     }
+
+    return results.rows[0];
   }
 
   /** Get: get message by id
@@ -73,7 +75,7 @@ class Message {
       throw new Error('No message by id')
     }
 
-    let results = await db.query(
+    results = await db.query(
       `SELECT username, first_name, last_name, phone
       FROM users
       WHERE username = $1;`,
@@ -85,7 +87,7 @@ class Message {
       throw new Error('Unable to find from_user')
     }
 
-    let results = await db.query(
+    results = await db.query(
       `SELECT username, first_name, last_name, phone
       FROM users
       WHERE username = $1;`,

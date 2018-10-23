@@ -11,18 +11,6 @@ const jwt = require('jsonwebtoken');
  *
  **/
 
-function ensureLoggedIn(req, res, next) {
-  try {
-    const tokenFromBody = req.body._token;
-    jwt.verify(tokenFromBody, SECRET_KEY);
-    return next();
-  }
-
-  catch (err) {
-    return next({ status: 401, message: "Unauthorized" })
-  }
-}
-
 router.post("/login", async function (req, res, next) {
   try {
     const { username, password } = req.body;

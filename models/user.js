@@ -112,8 +112,8 @@ class User {
     const messages = results.rows;
 
     const toUserPromises = messages.map(row => {
-      db.query(
-        `SELECT id, first_name, last_name, phone
+      return db.query(
+        `SELECT username, first_name, last_name, phone
         FROM users
         WHERE username = $1;`,
         [row.to_user]
@@ -123,7 +123,7 @@ class User {
     const to_users = await Promise.all(toUserPromises);
 
     for (let i = 0; i < messages.length; i++) {
-      messages[i].to_user = to_users[i];
+      messages[i].to_user = to_users[i].rows[0];
     }
 
     if (results.rows.length === 0) {
@@ -131,8 +131,6 @@ class User {
     }
 
     return messages;
-
-
   }
 
   /** Return messages to this user.

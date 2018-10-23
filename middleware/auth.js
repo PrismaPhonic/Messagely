@@ -8,14 +8,14 @@ const { SECRET_KEY } = require("../config.js");
 function ensureLoggedIn(req, res, next) {
   try {
     const token = req.body._token || req.query._token;
-    let {username} = jwt.verify(token, SECRET_KEY);
+    let { username } = jwt.verify(token, SECRET_KEY);
     // put username on request as a convenience for routes
     req.username = username;
     return next();
   }
 
   catch (err) {
-    return next({ status: 401, message: "Unauthorized"});
+    return next({ status: 401, message: "Unauthorized" });
   }
 }
 
@@ -39,8 +39,13 @@ function ensureCorrectUser(req, res, next) {
   }
 }
 
+function isCorrectMessageUser(req, message) {
+  return (req.username === message.to_user.username || req.username === message.from_user.username);
+}
+
 
 module.exports = {
   ensureLoggedIn,
-  ensureCorrectUser
+  ensureCorrectUser,
+  isCorrectMessageUser
 };
