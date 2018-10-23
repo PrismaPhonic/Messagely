@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Message = require('../models/message');
-const { ensureLoggedIn, ensureCorrectUser, isCorrectMessageUser } = require('../middleware/auth');
+const { ensureLoggedIn, ensureCorrectUser, isCorrectMessageUser, isReceivingMessageUser } = require('../middleware/auth');
 const { SECRET_KEY } = require('../config');
 const jwt = require('jsonwebtoken');
 
@@ -40,7 +40,7 @@ router.get('/:id', ensureLoggedIn, async function (req, res, next) {
  *
  **/
 
-router.post('/', async function (req, res, next) {
+router.post('/', ensureLoggedIn, async function (req, res, next) {
   try {
     return res.json(await Message.create(req.body));
   }
@@ -59,9 +59,12 @@ router.post('/', async function (req, res, next) {
  *
  **/
 
-router.post('/:id/read', async function (req, res, next) {
+router.post('/:id/read', ensureLoggedIn, async function (req, res, next) {
   try {
-    return res.json({ message: await Message.markRead(req.params.id) });
+    if (await isReceivingMessageUser(req, req.params.id)) {
+      return res.json({ message: await Message.markRead(req.params.id) });
+    }
+    throw new Error('Unauthorized - You are not the receiving message user')
   }
   catch (err) {
     return next(err)

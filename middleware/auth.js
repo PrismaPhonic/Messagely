@@ -2,6 +2,7 @@
 
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config.js");
+const Message = require('../models/message');
 
 /** Middleware: Requires user is logged in. */
 
@@ -43,9 +44,14 @@ function isCorrectMessageUser(req, message) {
   return (req.username === message.to_user.username || req.username === message.from_user.username);
 }
 
+async function isReceivingMessageUser(req, messageId) {
+  const message = await Message.get(messageId);
+  return (req.username === message.to_user.username)
+}
 
 module.exports = {
   ensureLoggedIn,
   ensureCorrectUser,
-  isCorrectMessageUser
+  isCorrectMessageUser,
+  isReceivingMessageUser
 };

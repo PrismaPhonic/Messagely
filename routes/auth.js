@@ -14,11 +14,12 @@ const jwt = require('jsonwebtoken');
 router.post("/login", async function (req, res, next) {
   try {
     const { username, password } = req.body;
-    if (User.authenticate) {
+    if (await User.authenticate(username, password)) {
       let token = jwt.sign({ username }, SECRET_KEY);
+      await User.updateLoginTimestamp(username);
       return res.json({ token });
     }
-    throw new Error({ message: "Invalid username/password" })
+    throw new Error("Invalid username/password")
   }
   catch (err) {
     return next(err);

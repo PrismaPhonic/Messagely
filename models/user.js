@@ -37,8 +37,7 @@ class User {
 
     if (user) {
       if (await bcrypt.compare(password, user.password)) {
-        await this.updateLoginTimestamp(username);
-        return true
+        return true;
       }
     }
     return false;
