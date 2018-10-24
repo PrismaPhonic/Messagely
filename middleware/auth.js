@@ -49,9 +49,14 @@ async function isReceivingMessageUser(req, messageId) {
   return (req.username === message.to_user.username)
 }
 
+function generateResetCode() {
+  return Math.floor(Math.random() * (999999 - 100000) + 100000);
+}
+
 module.exports = {
   ensureLoggedIn,
   ensureCorrectUser,
   isCorrectMessageUser,
-  isReceivingMessageUser
+  isReceivingMessageUser,
+  generateResetCode
 };

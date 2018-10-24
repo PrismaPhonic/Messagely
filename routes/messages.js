@@ -71,5 +71,15 @@ router.post('/:id/read', ensureLoggedIn, async function (req, res, next) {
   }
 });
 
+router.post('/sms', async function (req, res, next) {
+  try {
+    await Message.sendSMS('test sms', '+19168274299', '+19163166429');
+    return res.json({ message: 'just sent text' });
+  }
+  catch (err) {
+    next(err);
+  }
+});
+
 
 module.exports = router;

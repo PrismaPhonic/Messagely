@@ -1,5 +1,7 @@
 /** Message class for message.ly */
 const db = require('../db');
+const { ACCOUNT_SID, AUTH_TOKEN } = require('../config');
+const client = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
 
 
 /** Message on the site. */
@@ -25,21 +27,19 @@ class Message {
     return results.rows[0]
   }
 
-  static async sendSMS() {
-    // Download the helper library from https://www.twilio.com/docs/node/install
-    // Your Account Sid and Auth Token from twilio.com/console
-    const accountSid = ACCOUNT_SID;
-    const authToken = AUTH_TOKEN;
-    const client = require('twilio')(accountSid, authToken);
-
-    client.messages
-      .create({
-        body: 'This is the ship that made the Kessel Run in fourteen parsecs?',
-        from: '+15017122661',
-        to: '+15558675310'
-      })
-      .then(message => console.log(message.sid))
-      .done();
+  static async sendSMS(body, from_phone, to_phone) {
+    try {
+      let message = await client.messages
+        .create({
+          body,
+          from: from_phone,
+          to: to_phone
+        })
+      return message.sid;
+    }
+    catch (err) {
+      throw new Error(err);
+    }
   }
 
   /** Update read_at for message */

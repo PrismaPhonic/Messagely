@@ -54,6 +54,48 @@ class User {
     }
   }
 
+  /** Add reset code to user row */
+
+  static async addResetCode(username, resetCode) {
+    let results = await db.query(
+      "UPDATE users SET reset_code = $1 WHERE username = $2 RETURNING username",
+      [resetCode, username]);
+    if (!results.rows[0]) {
+      throw new Error('Unable to add reset code')
+    }
+  }
+
+  /** Update user password */
+
+  static async updatePassword(username, resetCode, newPassword) {
+    let results = await db.query(`
+      SELECT reset_code FROM users WHERE username = $1;
+    `,
+      [username]);
+
+    const reset_code = results.rows[0].reset_code;
+    console.log(reset_code);
+    if (reset_code !== resetCode) {
+      throw new Error(`Incorrect reset code!`);
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, BCRYPT_WORK_ROUNDS);
+
+    // setting hashed password and also setting reset_code to NULL so it can't
+    // be used again
+    results = await db.query(
+      "UPDATE users SET password = $1, reset_code = NULL WHERE username = $2 RETURNING username",
+      [newHashedPassword, username]);
+
+    if (!results.rows[0]) {
+      throw new Error('Unable to update password')
+    }
+
+
+    return true;
+  }
+
+
   /** All: basic info on all users:
        * [{username, first_name, last_name}, ...] */
 
